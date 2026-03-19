@@ -7,15 +7,22 @@ const supabase = createClient(
 );
 
 const CATS = [
-  { n: 'Comida', i: '🍕', c: '#D4537E', bg: '#FBEAF0' },
-  { n: 'Súper', i: '🛒', c: '#1D9E75', bg: '#E1F5EE' },
-  { n: 'Transporte', i: '🚇', c: '#534AB7', bg: '#EEEDFE' },
-  { n: 'Salud', i: '💊', c: '#BA7517', bg: '#FAEEDA' },
-  { n: 'Suscripciones', i: '📱', c: '#F0997B', bg: '#FAECE7' },
-  { n: 'Salidas', i: '✨', c: '#AFA9EC', bg: '#EEEDFE' },
-  { n: 'Hogar', i: '🏠', c: '#5DCAA5', bg: '#E1F5EE' },
-  { n: 'Otros', i: '💸', c: '#888780', bg: '#F1EFE8' },
-];
+  {n:'Comida y Café',i:'🍕',c:'#D4537E',bg:'#FBEAF0'},
+  {n:'Súper',i:'🛒',c:'#1D9E75',bg:'#E1F5EE'},
+  {n:'Transporte',i:'🚇',c:'#534AB7',bg:'#EEEDFE'},
+  {n:'Uber',i:'🚗',c:'#222222',bg:'#f0f0f0'},
+  {n:'Salud',i:'💊',c:'#BA7517',bg:'#FAEEDA'},
+  {n:'Belleza',i:'💅',c:'#D4537E',bg:'#FBEAF0'},
+  {n:'Compras',i:'🛍️',c:'#993556',bg:'#FBEAF0'},
+  {n:'Regalos',i:'🎁',c:'#534AB7',bg:'#EEEDFE'},
+  {n:'Deporte',i:'🏃‍♀️',c:'#1D9E75',bg:'#E1F5EE'},
+  {n:'Celebraciones',i:'🥂',c:'#BA7517',bg:'#FAEEDA'},
+  {n:'Pago deuda',i:'💳',c:'#E24B4A',bg:'#FCEBEB'},
+  {n:'Suscripciones',i:'📱',c:'#F0997B',bg:'#FAECE7'},
+  {n:'Salidas',i:'✨',c:'#AFA9EC',bg:'#EEEDFE'},
+  {n:'Hogar',i:'🏠',c:'#5DCAA5',bg:'#E1F5EE'},
+  {n:'Otros',i:'💸',c:'#888780',bg:'#F1EFE8'},
+]
 
 function fmt(n: number) {
   return '$' + Math.abs(Math.round(n)).toLocaleString('es-CL');
