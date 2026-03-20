@@ -36,6 +36,7 @@ export default function App() {
   const [desc, setDesc] = useState('');
   const [selCat, setSelCat] = useState(0);
   const [tipoGasto, setTipoGasto] = useState('')
+  const [medioPago, setMedioPago] = useState('debito')
   const [mtype, setMtype] = useState('gasto');
   const [saved, setSaved] = useState(false);
   const [startDay, setStartDay] = useState(24);
@@ -145,6 +146,7 @@ export default function App() {
       category_id: null,
       date: new Date().toISOString().split('T')[0],
       tipo_gasto: tipoGasto || CATS[selCat].tipo,
+      medio_pago: medioPago,
     });
     setAmount('');
     setDesc('');
@@ -705,7 +707,30 @@ export default function App() {
                 </div>
               ))}
             </div>
-            {mtype === 'gasto' && (() => {
+            <div style={{marginBottom:12}}>
+            <div style={s.fin}>medio de pago</div>
+            <div style={{display:'flex',gap:6}}>
+    {[
+      {v:'debito',l:'💳 Débito'},
+      {v:'credito',l:'💜 Crédito'},
+      {v:'efectivo',l:'💵 Efectivo'},
+      {v:'transferencia',l:'📲 Transferencia'},
+    ].map(m=>(
+      <div key={m.v} onClick={()=>setMedioPago(m.v)}
+        style={{
+          flex:1,padding:'8px 4px',borderRadius:10,
+          border:`0.5px solid ${medioPago===m.v?'#D4537E':'#eee'}`,
+          background:medioPago===m.v?'#FBEAF0':'#fff',
+          textAlign:'center' as any,cursor:'pointer',
+          fontSize:10,fontWeight:500,
+          color:medioPago===m.v?'#D4537E':'#888'
+        }}>
+        {m.l}
+      </div>
+    ))}
+  </div>
+</div>
+           {mtype === 'gasto' && (() => {
   const tipoAuto = CATS[selCat].tipo
   const esEditable = tipoAuto === 'planeado' || tipoAuto === 'no_planeado'
   const tipoFinal = tipoGasto || tipoAuto
@@ -782,7 +807,7 @@ export default function App() {
           </div>
           <div style={{flex:1}}>
             <div style={{fontSize:13,fontWeight:500,color:'#333'}}>{m.description}</div>
-            <div style={{fontSize:11,color:'#888',marginTop:1}}>{m.date} · {m.tipo_gasto??'sin clasificar'}</div>
+            <div style={{fontSize:11,color:'#888',marginTop:1}}>{m.date} · {m.tipo_gasto??''} · {m.medio_pago??''}</div>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <div style={{fontSize:13,fontWeight:500,color:m.amount>0?'#1D9E75':'#D4537E'}}>
