@@ -162,6 +162,7 @@ export default function App() {
         medio_pago: medioPago,
       }).eq('id', editingId)
       setEditingId(null)
+      await loadMoves()
     } else {
       await supabase.from('transactions').insert({
         user_id: user.id,
@@ -846,16 +847,16 @@ export default function App() {
       <div>
         <div style={s.sl}>gasto por categoría</div>
         {CATS.filter(cat=>{
-          const total=moves.filter(m=>m.amount<0&&m.description===cat.n).reduce((s,m)=>s+Math.abs(m.amount),0)
+          const total=moves.filter(m=>m.amount<0&&(m.category_name||m.description)===cat.n)
           return total>0
         }).sort((a,b)=>{
           const ta=moves.filter(m=>m.amount<0&&m.description===a.n).reduce((s,m)=>s+Math.abs(m.amount),0)
           const tb=moves.filter(m=>m.amount<0&&m.description===b.n).reduce((s,m)=>s+Math.abs(m.amount),0)
           return tb-ta
         }).map(cat=>{
-          const total=moves.filter(m=>m.amount<0&&m.description===cat.n).reduce((s,m)=>s+Math.abs(m.amount),0)
+          const total=moves.filter(m=>m.amount<0&&(m.category_name||m.description)===cat.n)
           const pct=Math.round(total/Math.max(spent,1)*100)
-          const movsCat=moves.filter(m=>m.description===cat.n&&m.amount<0)
+          const movsCat=moves.filter(m=>(m.category_name||m.description)===cat.n&&m.amount<0)
           return (
             <div key={cat.n} style={{background:cat.bg,borderRadius:14,padding:'12px 14px',marginBottom:8,border:`0.5px solid ${cat.c}`}}>
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
