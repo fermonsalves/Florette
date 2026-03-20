@@ -192,11 +192,10 @@ export default function App() {
   const balance = income - spent;
 
   const s = {
-    app: { maxWidth: '100%', width: '100%', margin: 0, fontFamily: 'system-ui', background: '#fff', minHeight: '100vh' } as any,
+    app: { maxWidth: '100%', width: '100%', margin: 0, fontFamily: "'Nunito', system-ui", background: '#fff', minHeight: '100vh' } as any,
     hero: { background: '#FBEAF0', padding: '16px 20px 20px' } as any,
     heroTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 } as any,
-    heroName: { fontSize: 13, fontWeight: 500, color: '#D4537E' } as any,
-    heroSub: { fontSize: 11, color: '#D4537E', opacity: 0.65 } as any,
+    heroName: { fontSize: 15, fontWeight: 600, color: '#D4537E', fontFamily: "'Dancing Script', cursive" } as any,    heroSub: { fontSize: 11, color: '#D4537E', opacity: 0.65 } as any,
     ava: { width: 34, height: 34, borderRadius: '50%', background: '#F4C0D1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, color: '#72243E', cursor: 'pointer' } as any,
     heroAmt: { fontSize: 30, fontWeight: 500, color: '#72243E', letterSpacing: -0.5, marginBottom: 12 } as any,
     pills: { display: 'flex', gap: 7 } as any,
@@ -212,7 +211,7 @@ export default function App() {
     amtBig: { fontSize: 34, fontWeight: 500, color: '#72243E', textAlign: 'center' as any, padding: '14px 0 6px', background: '#fff', borderRadius: 12, marginBottom: 12, border: '0.5px solid #F4C0D1', letterSpacing: -1 } as any,
     ttype: { display: 'flex', gap: 6, marginBottom: 12 } as any,
     tbtn: (on: boolean) => ({ flex: 1, padding: 9, borderRadius: 10, border: '0.5px solid #F4C0D1', background: on ? '#D4537E' : '#fff', fontSize: 13, fontWeight: 500, color: on ? '#fff' : '#D4537E', cursor: 'pointer', textAlign: 'center' as any }),
-    fi: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '0.5px solid #F4C0D1', background: '#fff', fontSize: 14, color: '#333', fontFamily: 'system-ui', marginBottom: 10, boxSizing: 'border-box' as any } as any,
+    fi: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '0.5px solid #F4C0D1', background: '#fff', fontSize: 14, color: '#333', fontFamily: "'Nunito', system-ui", marginBottom: 10, boxSizing: 'border-box' as any } as any,
     fin: { fontSize: 10, fontWeight: 500, color: '#D4537E', textTransform: 'uppercase' as any, letterSpacing: '.06em', marginBottom: 5 } as any,
     cpick: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 5, marginBottom: 12 } as any,
     cp: (sel: boolean) => ({ padding: '7px 4px', borderRadius: 9, border: sel ? '0.5px solid #F4C0D1' : '0.5px solid #eee', background: sel ? '#FBEAF0' : '#fff', textAlign: 'center' as any, cursor: 'pointer' }),
@@ -225,7 +224,7 @@ export default function App() {
     <div style={s.app}>
       <div style={{ background: '#FBEAF0', padding: '40px 20px 20px', textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 6 }}>🌸</div>
-        <div style={{ fontSize: 22, fontWeight: 500, color: '#72243E', marginBottom: 4 }}>Florette</div>
+        <div style={{ fontSize: 22, fontWeight: 500, color: '#72243E', marginBottom: 4, fontFamily: "'Dancing Script', cursive", fontSize: 28, fontWeight: 600, }}>Florette</div>
         <div style={{ fontSize: 13, color: '#D4537E' }}>Tu app de finanzas personales</div>
       </div>
       <div style={s.loginWrap}>
