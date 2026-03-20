@@ -39,6 +39,8 @@ export default function App() {
   const [mtype, setMtype] = useState('gasto');
   const [saved, setSaved] = useState(false);
   const [startDay, setStartDay] = useState(24);
+  const [periodoVer, setPeriodoVer] = useState(0)
+  const [movesHistorial, setMovesHistorial] = useState<any[]>([])
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [user, setUser] = useState<any>(null);
@@ -74,12 +76,37 @@ export default function App() {
     setTab('agregar')
   }
   async function loadMoves() {
+    const today = new Date()
+    const diaHoy = today.getDate()
+    const mes = today.getMonth()
+    const anio = today.getFullYear()
+  
+    let periodoInicio: string
+    let periodoFin: string
+  
+    if (diaHoy >= startDay) {
+      periodoInicio = `${anio}-${String(mes + 1).padStart(2,'0')}-${String(startDay).padStart(2,'0')}`
+      const finDate = new Date(anio, mes + 1, startDay)
+      finDate.setDate(finDate.getDate() - 1)
+      periodoFin = finDate.toISOString().split('T')[0]
+    } else {
+      const mesAnterior = mes === 0 ? 11 : mes - 1
+      const anioAnterior = mes === 0 ? anio - 1 : anio
+      periodoInicio = `${anioAnterior}-${String(mesAnterior + 1).padStart(2,'0')}-${String(startDay).padStart(2,'0')}`
+      const finDate = new Date(anio, mes, startDay)
+      finDate.setDate(finDate.getDate() - 1)
+      periodoFin = finDate.toISOString().split('T')[0]
+    }
+  
     const { data } = await supabase
       .from('transactions')
       .select('*')
+      .gte('date', periodoInicio)
+      .lte('date', periodoFin)
       .order('date', { ascending: false })
-      .limit(50);
-    if (data) setMoves(data);
+      .limit(200)
+  
+    if (data) setMoves(data)
   }
 
   async function saveMove() {
@@ -429,7 +456,7 @@ export default function App() {
       </div>
 
       <div style={s.nav}>
-        {['inicio', 'agregar', 'gastos', 'config'].map((t) => (
+      {['inicio', 'agregar', 'gastos', 'historial', 'config'].map((t) => (
           <div key={t} style={s.nb(tab === t)} onClick={() => setTab(t)}>
             {t === 'inicio'
               ? 'Inicio'
@@ -437,6 +464,8 @@ export default function App() {
               ? 'Agregar'
               : t === 'gastos'
               ? 'Gastos'
+              : t === 'historial'
+              ? 'Historial'
               : 'Config'}
           </div>
         ))}
@@ -753,6 +782,110 @@ export default function App() {
   </div>
 )}
 
+{tab === 'historial' && (
+  <div style={s.sc}>
+    {(() => {
+      const today = new Date()
+      const diaHoy = today.getDate()
+      let mesBase = today.getMonth()
+      let anioBase = today.getFullYear()
+      if (diaHoy < startDay) {
+        mesBase--
+        if (mesBase < 0) { mesBase = 11; anioBase-- }
+      }
+      let mesVer = mesBase - periodoVer
+      let anioVer = anioBase
+      while (mesVer < 0) { mesVer += 12; anioVer-- }
+      const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+      const mesVerFin = mesVer === 11 ? 0 : mesVer + 1
+      const anioVerFin = mesVer === 11 ? anioVer + 1 : anioVer
+      const label = `${startDay} ${MESES[mesVer]} → ${startDay-1} ${MESES[mesVerFin]} ${anioVerFin}`
+      const hIncome = movesHistorial.filter(m=>m.amount>0).reduce((s,m)=>s+m.amount,0)
+      const hSpent = movesHistorial.filter(m=>m.amount<0).reduce((s,m)=>s+Math.abs(m.amount),0)
+      const hBalance = hIncome - hSpent
+      return (
+        <div>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            <div
+              onClick={()=>loadPeriodo(periodoVer+1)}
+              style={{padding:'7px 14px',borderRadius:20,background:'#FBEAF0',border:'0.5px solid #F4C0D1',fontSize:13,color:'#D4537E',cursor:'pointer',fontWeight:500}}>
+              ← Anterior
+            </div>
+            <div style={{fontSize:13,fontWeight:500,color:'#72243E',textAlign:'center'}}>{label}</div>
+            <div
+              onClick={()=>{ if(periodoVer>0) loadPeriodo(periodoVer-1) }}
+              style={{padding:'7px 14px',borderRadius:20,background: periodoVer>0?'#FBEAF0':'#f5f5f5',border:'0.5px solid #F4C0D1',fontSize:13,color:periodoVer>0?'#D4537E':'#ccc',cursor:periodoVer>0?'pointer':'default',fontWeight:500}}>
+              Siguiente →
+            </div>
+          </div>
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:16}}>
+            <div style={{background:'#f9f9f9',borderRadius:12,padding:12,textAlign:'center'}}>
+              <div style={{fontSize:10,color:'#888',marginBottom:2}}>Gastado</div>
+              <div style={{fontSize:16,fontWeight:500,color:'#D4537E'}}>{fmt(hSpent)}</div>
+            </div>
+            <div style={{background:'#f9f9f9',borderRadius:12,padding:12,textAlign:'center'}}>
+              <div style={{fontSize:10,color:'#888',marginBottom:2}}>Ingresos</div>
+              <div style={{fontSize:16,fontWeight:500,color:'#1D9E75'}}>{fmt(hIncome)}</div>
+            </div>
+            <div style={{background:'#f9f9f9',borderRadius:12,padding:12,textAlign:'center'}}>
+              <div style={{fontSize:10,color:'#888',marginBottom:2}}>Balance</div>
+              <div style={{fontSize:16,fontWeight:500,color:'#534AB7'}}>{fmt(hBalance)}</div>
+            </div>
+          </div>
+
+          <div style={s.sl}>gasto por clasificación</div>
+          <div style={{display:'flex',flexDirection:'column' as any,gap:8,marginBottom:16}}>
+            {[
+              {tipo:'esencial',label:'🏠 Esencial',c:'#534AB7',bg:'#EEEDFE'},
+              {tipo:'planeado',label:'📋 Gusto planeado',c:'#1D9E75',bg:'#E1F5EE'},
+              {tipo:'no_planeado',label:'⚡ Gusto no planeado',c:'#D4537E',bg:'#FBEAF0'},
+              {tipo:'ahorro',label:'🌱 Ahorro',c:'#1D9E75',bg:'#E1F5EE'},
+            ].map(t=>{
+              const total=movesHistorial.filter(m=>m.tipo_gasto===t.tipo&&m.amount<0).reduce((s,m)=>s+Math.abs(m.amount),0)
+              if(total===0) return null
+              const pct=Math.round(total/Math.max(hSpent,1)*100)
+              return (
+                <div key={t.tipo} style={{background:t.bg,borderRadius:12,padding:'10px 14px',border:`0.5px solid ${t.c}`}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}>
+                    <div style={{fontSize:12,fontWeight:500,color:t.c}}>{t.label}</div>
+                    <div style={{fontSize:13,fontWeight:500,color:t.c}}>{fmt(total)} · {pct}%</div>
+                  </div>
+                  <div style={{height:5,borderRadius:3,background:'rgba(0,0,0,0.1)',overflow:'hidden'}}>
+                    <div style={{height:'100%',borderRadius:3,background:t.c,width:`${pct}%`}}/>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div style={s.sl}>movimientos</div>
+          <div style={s.card}>
+            {movesHistorial.length===0 && (
+              <div style={{padding:20,textAlign:'center',fontSize:13,color:'#888'}}>
+                {periodoVer===0?'Cargando...':'Sin movimientos en este período'}
+              </div>
+            )}
+            {movesHistorial.map((m,i)=>(
+              <div key={i} style={{...s.txnRow,borderBottom:i<movesHistorial.length-1?'0.5px solid #f0f0f0':'none'}}>
+                <div style={{width:36,height:36,borderRadius:'50%',background:'#FBEAF0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+                  {CATS.find(c=>c.n===m.description)?.i??'💳'}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:500,color:'#333'}}>{m.description}</div>
+                  <div style={{fontSize:11,color:'#888',marginTop:1}}>{m.date} · {m.tipo_gasto??''}</div>
+                </div>
+                <div style={{fontSize:13,fontWeight:500,color:m.amount>0?'#1D9E75':'#D4537E'}}>
+                  {m.amount>0?'+':'−'}{fmt(m.amount)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    })()}
+  </div>
+)}
       {tab === 'config' && (
         <div style={s.sc}>
           <div style={s.sl}>inicio de mes financiero</div>
