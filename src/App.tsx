@@ -38,7 +38,6 @@ export default function App() {
   const [tipoGasto, setTipoGasto] = useState('')
   const [medioPago, setMedioPago] = useState('debito')
   const [editingId, setEditingId] = useState<string|null>(null)
-  const [editingDate, setEditingDate] = useState<string|null>(null)
   const [mtype, setMtype] = useState('gasto');
   const [saved, setSaved] = useState(false);
   const [startDay, setStartDay] = useState(24);
@@ -86,7 +85,6 @@ export default function App() {
     setTipoGasto(m.tipo_gasto || '')
     setMedioPago(m.medio_pago || 'debito')
     setEditingId(m.id)
-    setEditingDate(m.date)
     setTab('agregar')
   }
   async function loadPeriodo(offset: number) {
