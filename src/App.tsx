@@ -60,6 +60,15 @@ export default function App() {
   useEffect(() => { 
     if (user) loadMoves();
   }, [user]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('tab') === 'agregar') {
+      setTab('agregar')
+    }
+    if (params.get('monto')) {
+      setAmount(params.get('monto') || '')
+    }
+  }, [user])
   async function deleteMove(id: string) {
     if(!confirm('¿Eliminar este movimiento?')) return
     await supabase.from('transactions').delete().eq('id', id)
