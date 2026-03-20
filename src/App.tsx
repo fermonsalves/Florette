@@ -7,21 +7,22 @@ const supabase = createClient(
 );
 
 const CATS = [
-  {n:'Comida y Café',i:'🍕',c:'#D4537E',bg:'#FBEAF0'},
-  {n:'Súper',i:'🛒',c:'#1D9E75',bg:'#E1F5EE'},
-  {n:'Transporte',i:'🚇',c:'#534AB7',bg:'#EEEDFE'},
-  {n:'Uber',i:'🚗',c:'#222222',bg:'#f0f0f0'},
-  {n:'Salud',i:'💊',c:'#BA7517',bg:'#FAEEDA'},
-  {n:'Belleza',i:'💅',c:'#D4537E',bg:'#FBEAF0'},
-  {n:'Compras',i:'🛍️',c:'#993556',bg:'#FBEAF0'},
-  {n:'Regalos',i:'🎁',c:'#534AB7',bg:'#EEEDFE'},
-  {n:'Deporte',i:'🏃‍♀️',c:'#1D9E75',bg:'#E1F5EE'},
-  {n:'Celebraciones',i:'🥂',c:'#BA7517',bg:'#FAEEDA'},
-  {n:'Pago deuda',i:'💳',c:'#E24B4A',bg:'#FCEBEB'},
-  {n:'Suscripciones',i:'📱',c:'#F0997B',bg:'#FAECE7'},
-  {n:'Salidas',i:'✨',c:'#AFA9EC',bg:'#EEEDFE'},
-  {n:'Hogar',i:'🏠',c:'#5DCAA5',bg:'#E1F5EE'},
-  {n:'Otros',i:'💸',c:'#888780',bg:'#F1EFE8'},
+  {n:'Comida y Café',i:'🍕',c:'#D4537E',bg:'#FBEAF0',tipo:'planeado'},
+  {n:'Súper',i:'🛒',c:'#1D9E75',bg:'#E1F5EE',tipo:'esencial'},
+  {n:'Transporte',i:'🚇',c:'#534AB7',bg:'#EEEDFE',tipo:'esencial'},
+  {n:'Uber',i:'🚗',c:'#444444',bg:'#f0f0f0',tipo:'planeado'},
+  {n:'Salud',i:'💊',c:'#BA7517',bg:'#FAEEDA',tipo:'esencial'},
+  {n:'Belleza',i:'💅',c:'#D4537E',bg:'#FBEAF0',tipo:'planeado'},
+  {n:'Compras',i:'🛍️',c:'#993556',bg:'#FBEAF0',tipo:'no_planeado'},
+  {n:'Regalos',i:'🎁',c:'#534AB7',bg:'#EEEDFE',tipo:'no_planeado'},
+  {n:'Deporte',i:'🏃‍♀️',c:'#1D9E75',bg:'#E1F5EE',tipo:'planeado'},
+  {n:'Celebraciones',i:'🥂',c:'#BA7517',bg:'#FAEEDA',tipo:'no_planeado'},
+  {n:'Pago deuda',i:'💳',c:'#E24B4A',bg:'#FCEBEB',tipo:'planeado'},
+  {n:'Suscripciones',i:'📱',c:'#F0997B',bg:'#FAECE7',tipo:'planeado'},
+  {n:'Salidas',i:'✨',c:'#AFA9EC',bg:'#EEEDFE',tipo:'no_planeado'},
+  {n:'Hogar',i:'🏠',c:'#5DCAA5',bg:'#E1F5EE',tipo:'esencial'},
+  {n:'Ahorro',i:'🌱',c:'#1D9E75',bg:'#E1F5EE',tipo:'ahorro'},
+  {n:'Otros',i:'💸',c:'#888780',bg:'#F1EFE8',tipo:'no_planeado'},
 ]
 
 function fmt(n: number) {
@@ -34,6 +35,7 @@ export default function App() {
   const [amount, setAmount] = useState('');
   const [desc, setDesc] = useState('');
   const [selCat, setSelCat] = useState(0);
+  const [tipoGasto, setTipoGasto] = useState('')
   const [mtype, setMtype] = useState('gasto');
   const [saved, setSaved] = useState(false);
   const [startDay, setStartDay] = useState(24);
@@ -75,6 +77,7 @@ export default function App() {
       description: desc || CATS[selCat].n,
       category_id: null,
       date: new Date().toISOString().split('T')[0],
+      tipo_gasto: tipoGasto || CATS[selCat].tipo,
     });
     setAmount('');
     setDesc('');
@@ -588,6 +591,52 @@ export default function App() {
                 </div>
               ))}
             </div>
+            {mtype === 'gasto' && (() => {
+  const tipoAuto = CATS[selCat].tipo
+  const esEditable = tipoAuto === 'planeado' || tipoAuto === 'no_planeado'
+  const tipoFinal = tipoGasto || tipoAuto
+  const LABELS: Record<string,string> = {
+    esencial: '🏠 Esencial',
+    planeado: '📋 Gusto planeado',
+    no_planeado: '⚡ Gusto no planeado',
+    ahorro: '🌱 Ahorro',
+  }
+  const COLORS: Record<string,string> = {
+    esencial: '#534AB7',
+    planeado: '#1D9E75',
+    no_planeado: '#D4537E',
+    ahorro: '#1D9E75',
+  }
+  const BCOLORS: Record<string,string> = {
+    esencial: '#EEEDFE',
+    planeado: '#E1F5EE',
+    no_planeado: '#FBEAF0',
+    ahorro: '#E1F5EE',
+  }
+  return (
+    <div style={{marginBottom:12}}>
+      <div style={s.fin}>clasificación</div>
+      <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap' as any}}>
+        <div style={{
+          padding:'7px 14px',borderRadius:20,
+          background:BCOLORS[tipoFinal],
+          border:`0.5px solid ${COLORS[tipoFinal]}`,
+          fontSize:13,fontWeight:500,
+          color:COLORS[tipoFinal]
+        }}>
+          {LABELS[tipoFinal]}
+        </div>
+        {esEditable && (
+          <div
+            onClick={() => setTipoGasto(tipoFinal === 'planeado' ? 'no_planeado' : 'planeado')}
+            style={{fontSize:12,color:'#888',cursor:'pointer',textDecoration:'underline'}}>
+            cambiar a {tipoFinal === 'planeado' ? 'no planeado' : 'planeado'}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+})()}
             <button style={s.savebtn} onClick={saveMove}>
               Guardar movimiento
             </button>
