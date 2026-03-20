@@ -160,7 +160,6 @@ export default function App() {
         medio_pago: medioPago,
       }).eq('id', editingId)
       setEditingId(null)
-      setEditingDate(null)
     } else {
       await supabase.from('transactions').insert({
         user_id: user.id,
