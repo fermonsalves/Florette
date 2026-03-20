@@ -57,7 +57,22 @@ export default function App() {
   useEffect(() => {
     if (user) loadMoves();
   }, [user]);
-
+  async function deleteMove(id: string) {
+    if(!confirm('¿Eliminar este movimiento?')) return
+    await supabase.from('transactions').delete().eq('id', id)
+    loadMoves()
+  }
+  
+  function editMove(m: any) {
+    setAmount(String(Math.abs(m.amount)))
+    setDesc(m.description)
+    setMtype(m.amount > 0 ? 'ingreso' : 'gasto')
+    const catIdx = CATS.findIndex(c => c.n === m.description)
+    if(catIdx >= 0) setSelCat(catIdx)
+    setTipoGasto(m.tipo_gasto || '')
+    deleteMove(m.id)
+    setTab('agregar')
+  }
   async function loadMoves() {
     const { data } = await supabase
       .from('transactions')
@@ -427,98 +442,142 @@ export default function App() {
       </div>
 
       {tab === 'inicio' && (
-        <div style={s.sc}>
-          <div style={s.sl}>resumen</div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 8,
-              marginBottom: 16,
-            }}
-          >
-            {[
-              { l: 'Total gastado', v: fmt(spent), c: '#D4537E' },
-              { l: 'Total ingresos', v: fmt(income), c: '#1D9E75' },
-              { l: 'Balance', v: fmt(balance), c: '#534AB7' },
-              { l: 'Movimientos', v: moves.length.toString(), c: '#BA7517' },
-            ].map((k) => (
-              <div
-                key={k.l}
-                style={{ background: '#f9f9f9', borderRadius: 12, padding: 14 }}
-              >
-                <div style={{ fontSize: 11, color: '#888', marginBottom: 3 }}>
-                  {k.l}
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 500, color: k.c }}>
-                  {k.v}
-                </div>
+  <div style={s.sc}>
+    <div style={s.sl}>resumen del período</div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:16}}>
+      {[
+        {l:'Total gastado',v:fmt(spent),c:'#D4537E'},
+        {l:'Total ingresos',v:fmt(income),c:'#1D9E75'},
+        {l:'Balance',v:fmt(balance),c:'#534AB7'},
+        {l:'Movimientos',v:moves.length.toString(),c:'#BA7517'},
+      ].map(k=>(
+        <div key={k.l} style={{background:'#f9f9f9',borderRadius:12,padding:14}}>
+          <div style={{fontSize:11,color:'#888',marginBottom:3}}>{k.l}</div>
+          <div style={{fontSize:20,fontWeight:500,color:k.c}}>{k.v}</div>
+        </div>
+      ))}
+    </div>
+
+    <div style={s.sl}>proyección fin de mes</div>
+    <div style={{background:'#FBEAF0',borderRadius:14,padding:14,marginBottom:16,border:'0.5px solid #F4C0D1'}}>
+      {(() => {
+        const today = new Date()
+        const diaHoy = today.getDate()
+        const diasEnMes = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate()
+        const diasTranscurridos = diaHoy >= startDay
+          ? diaHoy - startDay + 1
+          : diasEnMes - startDay + diaHoy + 1
+        const diasTotales = diasEnMes
+        const proyeccion = diasTranscurridos > 0
+          ? Math.round((spent / diasTranscurridos) * diasTotales)
+          : 0
+        const pct = Math.min(100, Math.round((spent / Math.max(proyeccion,1)) * 100))
+        const alerta = proyeccion > income * 0.9
+        return (
+          <div>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
+              <div>
+                <div style={{fontSize:11,color:'#D4537E',marginBottom:1}}>Gasto actual</div>
+                <div style={{fontSize:18,fontWeight:500,color:'#72243E'}}>{fmt(spent)}</div>
+              </div>
+              <div style={{textAlign:'center'}}>
+                <div style={{fontSize:11,color:'#D4537E',marginBottom:1}}>Día del período</div>
+                <div style={{fontSize:18,fontWeight:500,color:'#72243E'}}>{diasTranscurridos}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:11,color:'#D4537E',marginBottom:1}}>Proyección</div>
+                <div style={{fontSize:18,fontWeight:500,color:alerta?'#E24B4A':'#72243E'}}>{fmt(proyeccion)}</div>
+              </div>
+            </div>
+            <div style={{height:8,borderRadius:4,background:'#F4C0D1',overflow:'hidden',marginBottom:6}}>
+              <div style={{height:'100%',borderRadius:4,background:alerta?'#E24B4A':'#D4537E',width:`${pct}%`,transition:'width 0.8s'}}/>
+            </div>
+            <div style={{fontSize:11,color:alerta?'#E24B4A':'#888'}}>
+              {alerta
+                ? `⚠️ Al ritmo actual superarás tus ingresos — cuidado con los gastos`
+                : `Vas bien — llevas ${pct}% del gasto proyectado`}
+            </div>
+          </div>
+        )
+      })()}
+    </div>
+
+    <div style={s.sl}>gasto por clasificación</div>
+    <div style={{display:'flex',flexDirection:'column' as any,gap:8,marginBottom:16}}>
+      {[
+        {tipo:'esencial',label:'🏠 Esencial',c:'#534AB7',bg:'#EEEDFE'},
+        {tipo:'planeado',label:'📋 Gusto planeado',c:'#1D9E75',bg:'#E1F5EE'},
+        {tipo:'no_planeado',label:'⚡ Gusto no planeado',c:'#D4537E',bg:'#FBEAF0'},
+        {tipo:'ahorro',label:'🌱 Ahorro',c:'#1D9E75',bg:'#E1F5EE'},
+      ].map(t=>{
+        const total=moves.filter(m=>m.tipo_gasto===t.tipo&&m.amount<0).reduce((s,m)=>s+Math.abs(m.amount),0)
+        if(total===0) return null
+        const pct=Math.round(total/Math.max(spent,1)*100)
+        return (
+          <div key={t.tipo} style={{background:t.bg,borderRadius:12,padding:'10px 14px',border:`0.5px solid ${t.c}`}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}>
+              <div style={{fontSize:12,fontWeight:500,color:t.c}}>{t.label}</div>
+              <div style={{fontSize:13,fontWeight:500,color:t.c}}>{fmt(total)} · {pct}%</div>
+            </div>
+            <div style={{height:5,borderRadius:3,background:'rgba(0,0,0,0.1)',overflow:'hidden'}}>
+              <div style={{height:'100%',borderRadius:3,background:t.c,width:`${pct}%`}}/>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+
+    <div style={s.sl}>gasto semanal</div>
+    <div style={{background:'#f9f9f9',borderRadius:14,padding:14,marginBottom:16}}>
+      {(() => {
+        const semanas: Record<string,number> = {'Sem 1':0,'Sem 2':0,'Sem 3':0,'Sem 4':0}
+        moves.filter(m=>m.amount<0).forEach(m=>{
+          const d = new Date(m.date).getDate()
+          if(d<=7) semanas['Sem 1']+=Math.abs(m.amount)
+          else if(d<=14) semanas['Sem 2']+=Math.abs(m.amount)
+          else if(d<=21) semanas['Sem 3']+=Math.abs(m.amount)
+          else semanas['Sem 4']+=Math.abs(m.amount)
+        })
+        const max = Math.max(...Object.values(semanas),1)
+        return (
+          <div style={{display:'flex',alignItems:'flex-end',gap:8,height:80}}>
+            {Object.entries(semanas).map(([sem,val])=>(
+              <div key={sem} style={{flex:1,display:'flex',flexDirection:'column' as any,alignItems:'center',gap:4}}>
+                <div style={{fontSize:10,color:'#D4537E',fontWeight:500}}>{val>0?fmt(val):''}</div>
+                <div style={{
+                  width:'100%',
+                  height:`${Math.max(4,Math.round((val/max)*56))}px`,
+                  background: val===max?'#D4537E':'#F4C0D1',
+                  borderRadius:'6px 6px 0 0'
+                }}/>
+                <div style={{fontSize:10,color:'#888'}}>{sem}</div>
               </div>
             ))}
           </div>
-          <div style={s.sl}>últimos movimientos</div>
-          <div style={s.card}>
-            {moves.length === 0 && (
-              <div
-                style={{
-                  padding: 20,
-                  textAlign: 'center',
-                  fontSize: 13,
-                  color: '#888',
-                }}
-              >
-                Aún no hay movimientos. ¡Agrega tu primer gasto!
-              </div>
-            )}
-            {moves.slice(0, 8).map((m, i) => (
-              <div
-                key={i}
-                style={{
-                  ...s.txnRow,
-                  borderBottom:
-                    i < Math.min(moves.length, 8) - 1
-                      ? '0.5px solid #f0f0f0'
-                      : 'none',
-                }}
-              >
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '50%',
-                    background: '#FBEAF0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 16,
-                    flexShrink: 0,
-                  }}
-                >
-                  {CATS.find((c) => c.n === m.description)?.i ?? '💳'}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#333' }}>
-                    {m.description}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#888', marginTop: 1 }}>
-                    {m.date}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: m.amount > 0 ? '#1D9E75' : '#D4537E',
-                  }}
-                >
-                  {m.amount > 0 ? '+' : '−'}
-                  {fmt(m.amount)}
-                </div>
-              </div>
-            ))}
+        )
+      })()}
+    </div>
+
+    <div style={s.sl}>últimos movimientos</div>
+    <div style={s.card}>
+      {moves.length===0&&<div style={{padding:20,textAlign:'center',fontSize:13,color:'#888'}}>¡Agrega tu primer gasto!</div>}
+      {moves.slice(0,8).map((m,i)=>(
+        <div key={i} style={{...s.txnRow,borderBottom:i<Math.min(moves.length,8)-1?'0.5px solid #f0f0f0':'none'}}>
+          <div style={{width:36,height:36,borderRadius:'50%',background:'#FBEAF0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+            {CATS.find(c=>c.n===m.description)?.i??'💳'}
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:500,color:'#333'}}>{m.description}</div>
+            <div style={{fontSize:11,color:'#888',marginTop:1}}>{m.date}</div>
+          </div>
+          <div style={{fontSize:13,fontWeight:500,color:m.amount>0?'#1D9E75':'#D4537E'}}>
+            {m.amount>0?'+':'−'}{fmt(m.amount)}
           </div>
         </div>
-      )}
+      ))}
+    </div>
+  </div>
+)}
 
       {tab === 'agregar' && (
         <div style={s.sc}>
@@ -656,69 +715,42 @@ export default function App() {
         </div>
       )}
 
-      {tab === 'gastos' && (
-        <div style={s.sc}>
-          <div style={s.sl}>todos los movimientos</div>
-          <div style={s.card}>
-            {moves.length === 0 && (
+{tab === 'gastos' && (
+  <div style={s.sc}>
+    <div style={s.sl}>todos los movimientos</div>
+    <div style={s.card}>
+      {moves.length===0&&<div style={{padding:20,textAlign:'center',fontSize:13,color:'#888'}}>Sin movimientos aún.</div>}
+      {moves.map((m,i)=>(
+        <div key={i} style={{...s.txnRow,borderBottom:i<moves.length-1?'0.5px solid #f0f0f0':'none'}}>
+          <div style={{width:36,height:36,borderRadius:'50%',background:'#FBEAF0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+            {CATS.find(c=>c.n===m.description)?.i??'💳'}
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:500,color:'#333'}}>{m.description}</div>
+            <div style={{fontSize:11,color:'#888',marginTop:1}}>{m.date} · {m.tipo_gasto??'sin clasificar'}</div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <div style={{fontSize:13,fontWeight:500,color:m.amount>0?'#1D9E75':'#D4537E'}}>
+              {m.amount>0?'+':'−'}{fmt(m.amount)}
+            </div>
+            <div style={{display:'flex',flexDirection:'column' as any,gap:3}}>
               <div
-                style={{
-                  padding: 20,
-                  textAlign: 'center',
-                  fontSize: 13,
-                  color: '#888',
-                }}
-              >
-                Sin movimientos aún.
+                onClick={()=>editMove(m)}
+                style={{fontSize:10,color:'#534AB7',cursor:'pointer',background:'#EEEDFE',padding:'2px 7px',borderRadius:8,fontWeight:500}}>
+                editar
               </div>
-            )}
-            {moves.map((m, i) => (
               <div
-                key={i}
-                style={{
-                  ...s.txnRow,
-                  borderBottom:
-                    i < moves.length - 1 ? '0.5px solid #f0f0f0' : 'none',
-                }}
-              >
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '50%',
-                    background: '#FBEAF0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 16,
-                    flexShrink: 0,
-                  }}
-                >
-                  {CATS.find((c) => c.n === m.description)?.i ?? '💳'}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#333' }}>
-                    {m.description}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#888', marginTop: 1 }}>
-                    {m.date} · {m.type}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: m.amount > 0 ? '#1D9E75' : '#D4537E',
-                  }}
-                >
-                  {m.amount > 0 ? '+' : '−'}
-                  {fmt(m.amount)}
-                </div>
+                onClick={()=>deleteMove(m.id)}
+                style={{fontSize:10,color:'#E24B4A',cursor:'pointer',background:'#FCEBEB',padding:'2px 7px',borderRadius:8,fontWeight:500}}>
+                borrar
               </div>
-            ))}
+            </div>
           </div>
         </div>
-      )}
+      ))}
+    </div>
+  </div>
+)}
 
       {tab === 'config' && (
         <div style={s.sc}>
