@@ -224,7 +224,7 @@ export default function App() {
     <div style={s.app}>
       <div style={{ background: '#FBEAF0', padding: '40px 20px 20px', textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 6 }}>🌸</div>
-        <div style={{ fontSize: 22, fontWeight: 500, color: '#72243E', marginBottom: 4, fontFamily: "'Dancing Script', cursive", fontSize: 28, fontWeight: 600, }}>Florette</div>
+        <div style={{ fontSize: 28, fontWeight: 600, color: '#72243E', marginBottom: 4, fontFamily: "'Dancing Script', cursive" }}>Florette</div>
         <div style={{ fontSize: 13, color: '#D4537E' }}>Tu app de finanzas personales</div>
       </div>
       <div style={s.loginWrap}>
