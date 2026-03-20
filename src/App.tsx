@@ -157,6 +157,7 @@ export default function App() {
         amount: finalAmount,
         type: mtype,
         description: desc || CATS[selCat].n,
+        category_name: CATS[selCat].n,
         tipo_gasto: tipoGasto || CATS[selCat].tipo,
         medio_pago: medioPago,
       }).eq('id', editingId)
@@ -167,6 +168,7 @@ export default function App() {
         amount: finalAmount,
         type: mtype,
         description: desc || CATS[selCat].n,
+        category_name: CATS[selCat].n,
         category_id: null,
         date: new Date().toISOString().split('T')[0],
         tipo_gasto: tipoGasto || CATS[selCat].tipo,
@@ -647,7 +649,7 @@ export default function App() {
       {moves.slice(0,8).map((m,i)=>(
         <div key={i} style={{...s.txnRow,borderBottom:i<Math.min(moves.length,8)-1?'0.5px solid #f0f0f0':'none'}}>
           <div style={{width:36,height:36,borderRadius:'50%',background:'#FBEAF0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
-            {CATS.find(c=>c.n===m.description)?.i??'💳'}
+          {CATS.find(c=>c.n===(m.category_name||m.description))?.i??'💳'}
           </div>
           <div style={{flex:1}}>
             <div style={{fontSize:13,fontWeight:500,color:'#333'}}>{m.description}</div>
@@ -726,7 +728,7 @@ export default function App() {
                 <div
                   key={i}
                   style={s.cp(selCat === i)}
-                  onClick={() => { setSelCat(i); setTipoGasto('') }}
+                  onClick={() => { setSelCat(i); setTipoGasto(CATS[i].tipo) }}
                 >
                   <div style={{ fontSize: 18 }}>{c.i}</div>
                   <div style={{ fontSize: 10, color: '#888' }}>{c.n}</div>
@@ -882,7 +884,7 @@ export default function App() {
           {moves.map((m,i)=>(
             <div key={i} style={{...s.txnRow,borderBottom:i<moves.length-1?'0.5px solid #f0f0f0':'none'}}>
               <div style={{width:36,height:36,borderRadius:'50%',background:'#FBEAF0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
-                {CATS.find(c=>c.n===m.description)?.i??'💳'}
+              {CATS.find(c=>c.n===(m.category_name||m.description))?.i??'💳'}
               </div>
               <div style={{flex:1}}>
                 <div style={{fontSize:13,fontWeight:500,color:'#333'}}>{m.description}</div>
@@ -998,7 +1000,7 @@ export default function App() {
             {movesHistorial.map((m,i)=>(
               <div key={i} style={{...s.txnRow,borderBottom:i<movesHistorial.length-1?'0.5px solid #f0f0f0':'none'}}>
                 <div style={{width:36,height:36,borderRadius:'50%',background:'#FBEAF0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
-                  {CATS.find(c=>c.n===m.description)?.i??'💳'}
+                {CATS.find(c=>c.n===(m.category_name||m.description))?.i??'💳'}
                 </div>
                 <div style={{flex:1}}>
                   <div style={{fontSize:13,fontWeight:500,color:'#333'}}>{m.description}</div>
