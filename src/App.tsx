@@ -37,6 +37,8 @@ export default function App() {
   const [selCat, setSelCat] = useState(0);
   const [tipoGasto, setTipoGasto] = useState('')
   const [medioPago, setMedioPago] = useState('debito')
+  const [editingId, setEditingId] = useState<string|null>(null)
+  const [editingDate, setEditingDate] = useState<string|null>(null)
   const [mtype, setMtype] = useState('gasto');
   const [saved, setSaved] = useState(false);
   const [startDay, setStartDay] = useState(24);
@@ -82,7 +84,9 @@ export default function App() {
     const catIdx = CATS.findIndex(c => c.n === m.description)
     if(catIdx >= 0) setSelCat(catIdx)
     setTipoGasto(m.tipo_gasto || '')
-    deleteMove(m.id)
+    setMedioPago(m.medio_pago || 'debito')
+    setEditingId(m.id)
+    setEditingDate(m.date)
     setTab('agregar')
   }
   async function loadPeriodo(offset: number) {
@@ -145,23 +149,38 @@ export default function App() {
   }
 
   async function saveMove() {
-    if (!amount) return;
-    const val = parseFloat(amount);
-    await supabase.from('transactions').insert({
-      user_id: user.id,
-      amount: mtype === 'gasto' ? -val : val,
-      type: mtype,
-      description: desc || CATS[selCat].n,
-      category_id: null,
-      date: new Date().toISOString().split('T')[0],
-      tipo_gasto: tipoGasto || CATS[selCat].tipo,
-      medio_pago: medioPago,
-    });
-    setAmount('');
-    setDesc('');
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-    loadMoves();
+    if (!amount) return
+    const val = parseFloat(amount)
+    const finalAmount = mtype === 'gasto' ? -val : val
+  
+    if (editingId) {
+      await supabase.from('transactions').update({
+        amount: finalAmount,
+        type: mtype,
+        description: desc || CATS[selCat].n,
+        tipo_gasto: tipoGasto || CATS[selCat].tipo,
+        medio_pago: medioPago,
+      }).eq('id', editingId)
+      setEditingId(null)
+      setEditingDate(null)
+    } else {
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        amount: finalAmount,
+        type: mtype,
+        description: desc || CATS[selCat].n,
+        category_id: null,
+        date: new Date().toISOString().split('T')[0],
+        tipo_gasto: tipoGasto || CATS[selCat].tipo,
+        medio_pago: medioPago,
+      })
+    }
+  
+    setAmount('')
+    setDesc('')
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+    loadMoves()
   }
 
   async function handleAuth() {
@@ -786,7 +805,7 @@ export default function App() {
   )
 })()}
             <button style={s.savebtn} onClick={saveMove}>
-              Guardar movimiento
+            {editingId ? 'Actualizar movimiento' : 'Guardar movimiento'}
             </button>
             {saved && (
               <div
