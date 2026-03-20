@@ -130,8 +130,9 @@ export default function App() {
 
   const s = {
     app: {
-      maxWidth: 390,
-      margin: '0 auto',
+      maxWidth: '100%',
+      width: '100%',
+      margin: 0,
       fontFamily: 'system-ui',
       background: '#fff',
       minHeight: '100vh',
@@ -196,7 +197,7 @@ export default function App() {
       borderBottom: on ? '2px solid #D4537E' : '2px solid transparent',
       fontWeight: 500,
     }),
-    sc: { padding: '14px 14px 80px' } as any,
+    sc: { padding: '14px 14px 80px', background: '#fff', minHeight: '100vh' } as any,
     sl: {
       fontSize: 10,
       fontWeight: 500,
