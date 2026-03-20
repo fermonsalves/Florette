@@ -8,7 +8,7 @@ const supabase = createClient(
 
 const CATS = [
   {n:'Comida y Café',i:'🍕',c:'#D4537E',bg:'#FBEAF0',tipo:'planeado'},
-  {n:'Súper',i:'🛒',c:'#1D9E75',bg:'#E1F5EE',tipo:'esencial'},
+  {n:'Súper',i:'🛒',c:'#1D9E75',bg:'#E1F5EE',tipo:'planeado'},
   {n:'Transporte',i:'🚇',c:'#534AB7',bg:'#EEEDFE',tipo:'esencial'},
   {n:'Uber',i:'🚗',c:'#444444',bg:'#f0f0f0',tipo:'planeado'},
   {n:'Salud',i:'💊',c:'#BA7517',bg:'#FAEEDA',tipo:'esencial'},
@@ -760,7 +760,7 @@ export default function App() {
 </div>
            {mtype === 'gasto' && (() => {
   const tipoAuto = CATS[selCat].tipo
-  const esEditable = tipoAuto === 'planeado' || tipoAuto === 'no_planeado'
+  const esEditable = tipoAuto === 'planeado' || tipoAuto === 'no_planeado' || tipoAuto === 'esencial'
   const tipoFinal = tipoGasto || tipoAuto
   const LABELS: Record<string,string> = {
     esencial: '🏠 Esencial',
@@ -795,9 +795,13 @@ export default function App() {
         </div>
         {esEditable && (
           <div
-            onClick={() => setTipoGasto(tipoFinal === 'planeado' ? 'no_planeado' : 'planeado')}
+          onClick={() => {
+            if(tipoFinal === 'esencial') setTipoGasto('no_planeado')
+            else if(tipoFinal === 'no_planeado') setTipoGasto('planeado')
+            else setTipoGasto('esencial')
+          }}
             style={{fontSize:12,color:'#888',cursor:'pointer',textDecoration:'underline'}}>
-            cambiar a {tipoFinal === 'planeado' ? 'no planeado' : 'planeado'}
+            cambiar a {tipoFinal === 'esencial' ? 'no planeado' : tipoFinal === 'no_planeado' ? 'planeado' : 'esencial'}
           </div>
         )}
       </div>
