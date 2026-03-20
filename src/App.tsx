@@ -39,7 +39,7 @@ export default function App() {
   const [mtype, setMtype] = useState('gasto');
   const [saved, setSaved] = useState(false);
   const [startDay, setStartDay] = useState(24);
-  const [periodoVer, setPeriodoVer] = useState(0)
+  const [periodoVer, setPeriodoVer] = useState<number>(0)
   const [movesHistorial, setMovesHistorial] = useState<any[]>([])
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
@@ -56,7 +56,7 @@ export default function App() {
     });
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { 
     if (user) loadMoves();
   }, [user]);
   async function deleteMove(id: string) {
@@ -74,6 +74,31 @@ export default function App() {
     setTipoGasto(m.tipo_gasto || '')
     deleteMove(m.id)
     setTab('agregar')
+  }
+  async function loadPeriodo(offset: number) {
+    const today = new Date()
+    const diaHoy = today.getDate()
+    let mesBase = today.getMonth()
+    let anioBase = today.getFullYear()
+    if (diaHoy < startDay) {
+      mesBase = mesBase - 1
+      if (mesBase < 0) { mesBase = 11; anioBase-- }
+    }
+    mesBase = mesBase - offset
+    while (mesBase < 0) { mesBase += 12; anioBase-- }
+    const periodoInicio = `${anioBase}-${String(mesBase + 1).padStart(2,'0')}-${String(startDay).padStart(2,'0')}`
+    const finDate = new Date(anioBase, mesBase + 1, startDay)
+    finDate.setDate(finDate.getDate() - 1)
+    const periodoFin = finDate.toISOString().split('T')[0]
+    const { data } = await supabase
+      .from('transactions')
+      .select('*')
+      .gte('date', periodoInicio)
+      .lte('date', periodoFin)
+      .order('date', { ascending: false })
+      .limit(200)
+    if (data) setMovesHistorial(data)
+    setPeriodoVer(offset)
   }
   async function loadMoves() {
     const today = new Date()
