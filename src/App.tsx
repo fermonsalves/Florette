@@ -725,7 +725,7 @@ export default function App() {
                 <div
                   key={i}
                   style={s.cp(selCat === i)}
-                  onClick={() => setSelCat(i)}
+                  onClick={() => { setSelCat(i); setTipoGasto('') }}
                 >
                   <div style={{ fontSize: 18 }}>{c.i}</div>
                   <div style={{ fontSize: 10, color: '#888' }}>{c.n}</div>
