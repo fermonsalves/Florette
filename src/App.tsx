@@ -37,6 +37,7 @@ export default function App() {
   const [selCat, setSelCat] = useState(0);
   const [tipoGasto, setTipoGasto] = useState('')
   const [medioPago, setMedioPago] = useState('debito')
+  const [gastosVista, setGastosVista] = useState('categorias')
   const [editingId, setEditingId] = useState<string|null>(null)
   const [mtype, setMtype] = useState('gasto');
   const [saved, setSaved] = useState(false);
@@ -822,38 +823,91 @@ export default function App() {
 
 {tab === 'gastos' && (
   <div style={s.sc}>
-    <div style={s.sl}>todos los movimientos</div>
-    <div style={s.card}>
-      {moves.length===0&&<div style={{padding:20,textAlign:'center',fontSize:13,color:'#888'}}>Sin movimientos aún.</div>}
-      {moves.map((m,i)=>(
-        <div key={i} style={{...s.txnRow,borderBottom:i<moves.length-1?'0.5px solid #f0f0f0':'none'}}>
-          <div style={{width:36,height:36,borderRadius:'50%',background:'#FBEAF0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
-            {CATS.find(c=>c.n===m.description)?.i??'💳'}
-          </div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:13,fontWeight:500,color:'#333'}}>{m.description}</div>
-            <div style={{fontSize:11,color:'#888',marginTop:1}}>{m.date} · {m.tipo_gasto??''} · {m.medio_pago??''}</div>
-          </div>
-          <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <div style={{fontSize:13,fontWeight:500,color:m.amount>0?'#1D9E75':'#D4537E'}}>
-              {m.amount>0?'+':'−'}{fmt(m.amount)}
-            </div>
-            <div style={{display:'flex',flexDirection:'column' as any,gap:3}}>
-              <div
-                onClick={()=>editMove(m)}
-                style={{fontSize:10,color:'#534AB7',cursor:'pointer',background:'#EEEDFE',padding:'2px 7px',borderRadius:8,fontWeight:500}}>
-                editar
-              </div>
-              <div
-                onClick={()=>deleteMove(m.id)}
-                style={{fontSize:10,color:'#E24B4A',cursor:'pointer',background:'#FCEBEB',padding:'2px 7px',borderRadius:8,fontWeight:500}}>
-                borrar
-              </div>
-            </div>
-          </div>
+    <div style={{display:'flex',gap:6,marginBottom:14}}>
+      {['categorias','lista'].map(v=>(
+        <div key={v} onClick={()=>setGastosVista(v)}
+          style={{flex:1,padding:'8px',borderRadius:10,textAlign:'center' as any,
+          background:gastosVista===v?'#D4537E':'#f9f9f9',
+          color:gastosVista===v?'#fff':'#888',
+          fontSize:12,fontWeight:500,cursor:'pointer',
+          border:`0.5px solid ${gastosVista===v?'#D4537E':'#eee'}`}}>
+          {v==='categorias'?'Por categoría':'Lista'}
         </div>
       ))}
     </div>
+
+    {gastosVista==='categorias' && (
+      <div>
+        <div style={s.sl}>gasto por categoría</div>
+        {CATS.filter(cat=>{
+          const total=moves.filter(m=>m.amount<0&&m.description===cat.n).reduce((s,m)=>s+Math.abs(m.amount),0)
+          return total>0
+        }).sort((a,b)=>{
+          const ta=moves.filter(m=>m.amount<0&&m.description===a.n).reduce((s,m)=>s+Math.abs(m.amount),0)
+          const tb=moves.filter(m=>m.amount<0&&m.description===b.n).reduce((s,m)=>s+Math.abs(m.amount),0)
+          return tb-ta
+        }).map(cat=>{
+          const total=moves.filter(m=>m.amount<0&&m.description===cat.n).reduce((s,m)=>s+Math.abs(m.amount),0)
+          const pct=Math.round(total/Math.max(spent,1)*100)
+          const movsCat=moves.filter(m=>m.description===cat.n&&m.amount<0)
+          return (
+            <div key={cat.n} style={{background:cat.bg,borderRadius:14,padding:'12px 14px',marginBottom:8,border:`0.5px solid ${cat.c}`}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+                <span style={{fontSize:20}}>{cat.i}</span>
+                <div style={{flex:1}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <div style={{fontSize:13,fontWeight:500,color:cat.c}}>{cat.n}</div>
+                    <div style={{fontSize:13,fontWeight:500,color:cat.c}}>{fmt(total)}</div>
+                  </div>
+                  <div style={{display:'flex',justifyContent:'space-between',marginTop:2}}>
+                    <div style={{fontSize:11,color:cat.c,opacity:.7}}>{movsCat.length} movimiento{movsCat.length!==1?'s':''}</div>
+                    <div style={{fontSize:11,color:cat.c,opacity:.7}}>{pct}% del total</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{height:5,borderRadius:3,background:'rgba(0,0,0,0.1)',overflow:'hidden'}}>
+                <div style={{height:'100%',borderRadius:3,background:cat.c,width:`${pct}%`}}/>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )}
+
+    {gastosVista==='lista' && (
+      <div>
+        <div style={s.sl}>todos los movimientos</div>
+        <div style={s.card}>
+          {moves.length===0&&<div style={{padding:20,textAlign:'center',fontSize:13,color:'#888'}}>Sin movimientos aún.</div>}
+          {moves.map((m,i)=>(
+            <div key={i} style={{...s.txnRow,borderBottom:i<moves.length-1?'0.5px solid #f0f0f0':'none'}}>
+              <div style={{width:36,height:36,borderRadius:'50%',background:'#FBEAF0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+                {CATS.find(c=>c.n===m.description)?.i??'💳'}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:500,color:'#333'}}>{m.description}</div>
+                <div style={{fontSize:11,color:'#888',marginTop:1}}>{m.date} · {m.tipo_gasto??''} · {m.medio_pago??''}</div>
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div style={{fontSize:13,fontWeight:500,color:m.amount>0?'#1D9E75':'#D4537E'}}>
+                  {m.amount>0?'+':'−'}{fmt(m.amount)}
+                </div>
+                <div style={{display:'flex',flexDirection:'column' as any,gap:3}}>
+                  <div onClick={()=>editMove(m)}
+                    style={{fontSize:10,color:'#534AB7',cursor:'pointer',background:'#EEEDFE',padding:'2px 7px',borderRadius:8,fontWeight:500}}>
+                    editar
+                  </div>
+                  <div onClick={()=>deleteMove(m.id)}
+                    style={{fontSize:10,color:'#E24B4A',cursor:'pointer',background:'#FCEBEB',padding:'2px 7px',borderRadius:8,fontWeight:500}}>
+                    borrar
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
   </div>
 )}
 
