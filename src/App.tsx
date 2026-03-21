@@ -22,6 +22,7 @@ const CATS = [
   {n:'Salidas',i:'✨',c:'#AFA9EC',bg:'#EEEDFE',tipo:'no_planeado'},
   {n:'Hogar',i:'🏠',c:'#5DCAA5',bg:'#E1F5EE',tipo:'esencial'},
   {n:'Ahorro',i:'🌱',c:'#1D9E75',bg:'#E1F5EE',tipo:'ahorro'},
+  {n:'Mascota',i:'🐱',c:'#D4537E',bg:'#FBEAF0',tipo:'planeado'},
   {n:'Otros',i:'💸',c:'#888780',bg:'#F1EFE8',tipo:'no_planeado'},
 ]
 
